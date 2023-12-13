@@ -1,6 +1,6 @@
-@Library('JenkinsSharedLib@master') _
-
+@Library('JenkinsSharedLib') _
 import groovyx.net.http.RESTClient
+import groovy.util.Base64
 
 def uploadToTeams(source, fileName, siteUrl, libraryName, credentialsId) {
    def client = new RESTClient("https://${siteUrl}")
