@@ -17,11 +17,11 @@ def upload(source, fileName, baseUrl, siteUrl, libraryName, clientID, clientSecr
     def accessToken = obtainAccessToken(clientID, clientSecret, baseUrl)
     echo "Access Token: ${accessToken}"
     
-    bat(label: "Upload files to Teams", script: """
-        curl -X POST ^
-        -H "Authorization: Bearer ${accessToken}" ^
-        -H "Accept: application/json;odata=verbose" ^
-        -F "file=@${source};type=application/x-zip-compressed" ^
-        "https://${siteUrl}/_api/web/lists/getbytitle('${libraryName}')/RootFolder/Files/Add(url='${fileName}.zip',overwrite=true)"
-    """)
+    // bat(label: "Upload files to Teams", script: """
+    //     curl -X POST ^
+    //     -H "Authorization: Bearer ${accessToken}" ^
+    //     -H "Accept: application/json;odata=verbose" ^
+    //     -F "file=@${source};type=application/x-zip-compressed" ^
+    //     "https://${siteUrl}/_api/web/lists/getbytitle('${libraryName}')/RootFolder/Files/Add(url='${fileName}.zip',overwrite=true)"
+    // """)
 }
