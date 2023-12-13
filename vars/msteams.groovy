@@ -1,4 +1,4 @@
-@Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.1')
+@Library('JenkinsSharedLib@master') _
 
 import groovyx.net.http.RESTClient
 
