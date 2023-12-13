@@ -1,18 +1,17 @@
 @Library('JenkinsSharedLib@master') _
 
-import jenkins.model.Jenkins
 import groovyx.net.http.RESTClient
 import groovy.util.Base64
 
-// Load the HTTP Builder library
-def httpBuilderLib = Jenkins.instance.pluginManager.uberClassLoader.loadClass('groovyx.net.http.RESTClient')
-def base64Lib = Jenkins.instance.pluginManager.uberClassLoader.loadClass('groovy.util.Base64')
-
 def uploadToTeams(source, fileName, siteUrl, libraryName, credentialsId) {
-    def client = new httpBuilderLib("https://${siteUrl}")
+    // Load HTTP Builder classes
+    def httpBuilderClass = this.getClass().classLoader.loadClass('groovyx.net.http.RESTClient')
+    def base64Class = this.getClass().classLoader.loadClass('groovy.util.Base64')
 
+    def client = httpBuilderClass.newInstance()
+    
     withCredentials([string(credentialsId: credentialsId, variable: 'credentials')]) {
-        def auth = "${credentials}".getBytes(base64Lib).encodeBase64().toString()
+        def auth = "${credentials}".getBytes(base64Class).encodeBase64().toString()
 
         def fileContent = new File(source).bytes
 
