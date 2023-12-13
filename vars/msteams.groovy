@@ -1,4 +1,4 @@
-@Library('JenkinsSharedLib') _
+@Library('JenkinsSharedLib@master') _
 import groovyx.net.http.RESTClient
 import groovy.util.Base64
 
