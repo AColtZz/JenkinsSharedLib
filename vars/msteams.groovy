@@ -1,4 +1,4 @@
-def uploadToTeams(source, fileName, siteUrl, libraryName, credentialsId) {
+def upload(source, fileName, siteUrl, libraryName, credentialsId) {
     bat(label: "Upload files to Teams", script: """
         SET "AccessToken="
         FOR /f "tokens=1,2 delims=:, " %%U in ('
