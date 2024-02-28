@@ -176,40 +176,6 @@ Sends files to Google Drive using cURL
 
 -  `upload(source, fileName, clientID, clientSecret, refreshToken, parents)` - Uploads files to a folder in Google Drive (Shared Drives are supported)
 
-### msteams.groovy
-
-Sends files to Google Drive using cURL
-
-**Functions:**
-
--  `upload(source, fileName, siteUrl, libraryName, credentialsId)` - Uploads files to a folder in Microsoft Teams
-
-1. **source:**
-
-   -  _Description:_ The local file path of the file you want to upload to Microsoft Teams.
-   -  _Example:_ `/path/to/your/file.zip`
-
-2. **fileName:**
-
-   -  _Description:_ The desired name for the file in the SharePoint library.
-   -  _Example:_ `'your-file-name'`
-   -  _Note:_ This can be different from the actual local file name.
-
-3. **siteUrl:**
-
-   -  _Description:_ The SharePoint site URL where the file will be uploaded.
-   -  _Example:_ `'https://yourcompany.sharepoint.com/sites/YourSite'`
-
-4. **libraryName:**
-
-   -  _Description:_ The name of the SharePoint document library where the file will be uploaded.
-   -  _Example:_ `'Documents'`
-
-5. **credentialsId:**
-   -  _Description:_ The Jenkins Credentials ID storing the necessary credentials for SharePoint authentication.
-   -  _Example:_ `'a1b2c3d4-e5f6-7890-1234-5678abcdef90'`
-   -  _Note:_ Ensure this is set to the correct Jenkins Credentials ID.
-
 ### sentry.groovy
 
 Tool to diagnose, fix and optimize performance and debug crashes. More information: https://sentry.io/
@@ -229,3 +195,35 @@ Uploads packaged projects to Steam
 -  `createAppManifest(appID, depotID, contentRoot, description = "", isPreview = false, localContentPath = "", branch = "", outputDir= "output")` - Creates app manifest
 -  `tryDeploy(appManifest)` - Tries to deploy to Steam using SteamGuard
 -  `deploy(appManifest, steamGuard = null)` - Deploy to Steam (**_Prefer using tryDeploy when trying to deploy to Steam!_**)
+
+# Included Scripts/Files:
+- Useful python script: `ms_upload.py` used by the msteams.groovy function(s)
+- Useful file: `ms_upload.json` used credentials manager in jenkins
+
+### msteams.groovy
+
+Sends files to sharepoint using MS Graph API, you will need to register/create an app through [Azure Portal](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade). Make sure that under *API Permissions* you grant permission to MS Graph Application = `Files.Read.All`, `Files.ReadWrite.All`, `Sites.ReadWrite.All`, `Sites.Selected` and finally under *Certificates & secrets* create a new client secret to use in the .json file. you can find other details such as tenant_id/app_id under the *Overview* tab of your application. Finally your site_name will look something like example: `VerdantGames` in this case it comes from `https://verdantgames.sharepoint.com/sites/VerdantGames`.
+
+**Functions:**
+-  `upload(auth_file, file_path, file_name, upload_folder)` - Uploads files to a folder in Microsoft SharePoint
+
+1. **auth_file:**
+
+   -  _Description:_ The jenkins credentials file json provided in the 'scripts/ms_upload.json' as example fill out the details and upload file to jenkins
+   -  _Example:_ `'<secret_file credential string example: 1238ds213-asds8a2-dasd8273-sadskjds>'`
+
+2. **file_path:**
+
+   -  _Description:_ The local path of your file to upload.
+   -  _Example:_ `'path/to/your/file/to/upload.zip'`
+   -  _Note:_ This can be different from the actual local file name.
+
+3. **file_name:**
+
+   -  _Description:_ The name of the file to upload.
+   -  _Example:_ `'upload.zip'`
+
+4. **upload_folder:**
+
+   -  _Description:_ The upload directory in ms sharepoint.
+   -  _Example:_ `'General/Uploads'`
