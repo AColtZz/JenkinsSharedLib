@@ -14,27 +14,28 @@ def clear()
 }
 
 // Can be called without calling init()
-def build(engineRoot, projectName, project, config, platform, outputDir, blueprintOnly = false, logFile = "${env.WORKSPACE}\\Logs\\UE5Build-${env.BUILD_NUMBER}.txt")
+def buildBlueprintProject(engineRoot, projectName, project, config, platform, outputDir, logFile = "${env.WORKSPACE}\\Logs\\UE5Build-${env.BUILD_NUMBER}.txt") 
 {
    init(engineRoot, projectName, project)
-   if (!blueprintOnly)
-   {
-      // Build
-      bat(label: "Run UnrealBuildTool", script: "\"${ue5Info.engineRoot}Engine\\Binaries\\DotNET\\UnrealBuildTool\\UnrealBuildTool.exe\" -projectfiles -project=\"${ue5Info.project}\" -Game -Rocket -Progress -NoIntellisense -WaitMutex -Platforms=\"${platform}\" PrecompileForTargets = PrecompileTargetsType.Any;")
-      
-      if (config.toLowerCase() == "development" && platform.toLowerCase() != "ps4")
-      {
-         bat(label: "Build UE5 project", script: "\"${ue5Info.engineRoot}Engine\\Build\\BatchFiles\\Build.bat\" ${ue5Info.projectName}Editor ${platform} ${config} \"${ue5Info.project}\" -Log=\"${logFile}\"")
-      }
-      
-      // Package
-      bat(label: "Package UE5 project", script: "\"${ue5Info.engineRoot}Engine\\Build\\BatchFiles\\RunUAT.bat\" BuildCookRun -Project=\"${ue5Info.project}\" -NoP4 -Distribution -TargetPlatform=${platform} -Platform=${platform} -ClientConfig=${config} -ServerConfig=${config} -Cook -Allmaps -Build -Stage -Pak -Archive -Archivedirectory=\"${outputDir}\" -Rocket -Prereqs -Package -crashreporter")
-   }
-   else
-   {
-      // Only package since we have a blueprintOnly project
-      bat(label: "Package UE5 project", script: "\"${ue5Info.engineRoot}Engine\\Build\\BatchFiles\\RunUAT.bat\" BuildCookRun -Project=\"${ue5Info.project}\" -NoP4 -Distribution -TargetPlatform=${platform} -Platform=${platform} -ClientConfig=${config} -ServerConfig=${config} -Cook -Allmaps -Build -Stage -Pak -Archive -Archivedirectory=\"${outputDir}\" -Rocket -Prereqs -Package")
-   }
+   
+   // Only package since we have a blueprintOnly project
+   bat(label: "Package UE5 project", script: "\"${ue5Info.engineRoot}Engine\\Build\\BatchFiles\\RunUAT.bat\" BuildCookRun -Project=\"${ue5Info.project}\" -NoP4 -Distribution -TargetPlatform=${platform} -Platform=${platform} -ClientConfig=${config} -ServerConfig=${config} -Cook -Allmaps -Build -Stage -Pak -Archive -Archivedirectory=\"${outputDir}\" -Rocket -Prereqs -Package")
+}
+
+def buildPrecompiledProject(engineRoot, projectName, project, config, platform, outputDir, logFile = "${env.WORKSPACE}\\Logs\\UE5Build-${env.BUILD_NUMBER}.txt")
+{
+   init(engineRoot, projectName, project)
+   
+   // Package
+   bat(label: "Package UE5 project", script: "\"${env.ENGINEROOT}Engine\\Build\\BatchFiles\\RunUAT.bat\" BuildCookRun -Project=\"${env.PROJECT}\" -NoP4 -nocompileeditor -skipbuildeditor -TargetPlatform=${env.PLATFORM} -Platform=${env.PLATFORM} -ClientConfig=${env.CONFIG} -Cook -Build -Stage -Pak -Archive -Archivedirectory=\"${env.OUTPUTDIR}\" -Rocket -Prereqs -iostore -compressed -Package -nocompile -nocompileuat")
+}
+
+def buildCustomProject(engineRoot, projectName, project, config, platform, outputDir, customFlags = "-Cook -Allmaps -Build -Stage -Pak -Rocket -Prereqs -Package -crashreporter", logFile = "${env.WORKSPACE}\\Logs\\UE5Build-${env.BUILD_NUMBER}.txt")
+{
+   init(engineRoot, projectName, project)
+   
+   // Package
+   bat(label: "Package UE5 project", script: "\"${ue5Info.engineRoot}Engine\\Build\\BatchFiles\\RunUAT.bat\" BuildCookRun -Project=\"${ue5Info.project}\" -NoP4 -Distribution -TargetPlatform=${platform} -Platform=${platform} -ClientConfig=${config} -ServerConfig=${config} -Archive -Archivedirectory=\"${outputDir}\" ${customFlags}")
 }
 
 def runAllTests(config = "Development", platform = "Win64")
@@ -78,33 +79,33 @@ def runAutomationCommand(testCommand, config = "Development", platform = "Win64"
 
 def getTestResults()
 {
-    def json = readFile file: 'Logs/UnitTestsReport/index.json', encoding: "UTF-8"
-    json = json.replace( "\uFEFF", "" );
-    return json
+   def json = readFile file: 'Logs/UnitTestsReport/index.json', encoding: "UTF-8"
+   json = json.replace( "\uFEFF", "" );
+   return json
 }
 
 // Author: https://www.emidee.net/ue4/2018/11/13/UE4-Unit-Tests-in-Jenkins.html
 @NonCPS
 def getJUnitXMLContentFromJSON( String json_content ) {
-    def j = new JsonSlurper().parseText( json_content )
-    
-    def sw = new StringWriter()
-    def builder = new MarkupBuilder( sw )
+   def j = new JsonSlurper().parseText( json_content )
+   
+   def sw = new StringWriter()
+   def builder = new MarkupBuilder( sw )
 
-    builder.doubleQuotes = true
-    builder.mkp.xmlDeclaration version: "1.0", encoding: "utf-8"
+   builder.doubleQuotes = true
+   builder.mkp.xmlDeclaration version: "1.0", encoding: "utf-8"
 
-    builder.testsuite( tests: j.succeeded + j.failed, failures: j.failed, time: j.totalDuration ) {
-        for ( test in j.tests ) {
-            builder.testcase( name: test.testDisplayName, classname: test.fullTestPath, status: test.state ) {
-                for ( entry in test.entries ) { 
-                    builder.failure( message: entry.event.message, type: entry.event.type, entry.filename + " " + entry.lineNumber )
-                }
-            }
-        }
-    } 
+   builder.testsuite( tests: j.succeeded + j.failed, failures: j.failed, time: j.totalDuration ) {
+      for ( test in j.tests ) {
+         builder.testcase( name: test.testDisplayName, classname: test.fullTestPath, status: test.state ) {
+               for ( entry in test.entries ) { 
+                  builder.failure( message: entry.event.message, type: entry.event.type, entry.filename + " " + entry.lineNumber )
+               }
+         }
+      }
+   } 
 
-    return sw.toString()
+   return sw.toString()
 }
 
 def fixupRedirects(platform = "Win64")

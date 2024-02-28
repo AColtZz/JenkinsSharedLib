@@ -12,6 +12,24 @@ def init(p4credential, p4host, p4workspace, p4viewMapping, cleanForce = true)
    }
 }
 
+def initGetLatestCL(p4credential, p4workspace, p4host)
+{
+   p4Info = [credential: p4credential, host: p4host, workspace: p4workspace]
+   def p4s = p4(credential: p4Info.credential, workspace: manualSpec(charset: 'none', cleanup: false, name: p4Info.workspace, pinHost: false, spec: clientSpec(allwrite: true, backup: true, changeView: '', clobber: true, compress: false, line: 'LOCAL', locked: false, modtime: false, rmdir: false, serverID: '', streamName: '', type: 'WRITABLE', view: '')))
+   def changes = p4s.run('changes', '-s', 'submitted', '-m1')
+   def change = ""
+   for (def item : changes) {
+      for (String key : item.keySet()) {
+         if (key == "change") {
+            change = item.get(key)
+         }
+         //value = item.get(key)
+         //println ("Key: " + key + " Value: " + value)
+      }
+   }
+   return change
+}
+
 def clean()
 {
    def p4s = p4(credential: p4Info.credential, workspace: manualSpec(charset: 'none', cleanup: false, name: p4Info.workspace, pinHost: false, spec: clientSpec(allwrite: true, backup: true, changeView: '', clobber: false, compress: false, line: 'LOCAL', locked: false, modtime: false, rmdir: false, serverID: '', streamName: '', type: 'WRITABLE', view: p4Info.viewMapping)))

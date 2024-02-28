@@ -53,10 +53,10 @@ def tryDeploy(appManifest)
       timeout(time: 3, unit: 'MINUTES') 
       {
          guardCode = input message: 'Insert Steam Guard code', ok: 'Submit', 
-                           parameters: 
-                           [
-                              string(name: 'Steam Guard Code', defaultValue: '', description: 'Provide the pipeline with the required Steam Guard code.')
-                           ]
+         parameters: 
+         [
+            string(name: 'Steam Guard Code', defaultValue: '', description: 'Provide the pipeline with the required Steam Guard code.')
+         ]
       }
 
       if (guardCode)
@@ -76,13 +76,13 @@ def tryDeploy(appManifest)
 def deploy(appManifest, steamGuard = null)
 {
    withCredentials([usernamePassword(credentialsId: steamInfo.credential, passwordVariable: 'STEAMPASS', usernameVariable: 'STEAMUSER')]) {
-        if (steamGuard)
-        {
-           bat (label: "Deploy to Steam with SteamGuard", script: "\"${steamInfo.steamCmd}\" +login %STEAMUSER% %STEAMPASS% \"${steamGuard}\"  +run_app_build_http \"${appManifest}\" +quit")
-        } 
-        else 
-        {
-           bat (label: "Deploy to Steam without SteamGuard", script: "\"${steamInfo.steamCmd}\" +login %STEAMUSER% %STEAMPASS% +run_app_build_http \"${appManifest}\" +quit")
-        }
-    }
+      if (steamGuard) {
+         log("Deploy called with steamGuard provided")
+         bat (label: "Deploy to Steam with SteamGuard", script: "\"${steamInfo.steamCmd}\" +login %STEAMUSER% %STEAMPASS% \"${steamGuard}\"  +run_app_build_http \"${appManifest}\" +quit")
+      } 
+      else {
+         log("Deploy called with no steamGuard provided")
+         bat (label: "Deploy to Steam without SteamGuard", script: "\"${steamInfo.steamCmd}\" +login %STEAMUSER% +run_app_build_http \"${appManifest}\" +quit")
+      }
+   }
 }
