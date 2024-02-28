@@ -28,10 +28,10 @@ file_path = sys.argv[1] #local file path
 file_name = sys.argv[2] #filename
 folder_name = sys.argv[3] #drive folder path/name
 
-tenant_id = json.loads(auth_file)['tenant_id']
-client_id = json.loads(auth_file)['client_id']
-client_secret = json.loads(auth_file)['client_secret']
-site_name = json.loads(auth_file)['site_name']
+tenant_id = json.loads(auth_file).get('tenant_id')
+client_id = json.loads(auth_file).get('client_id')
+client_secret = json.loads(auth_file).get('client_secret')
+site_name = json.loads(auth_file).get('site_name')
 
 # Authenticate and get an access token
 def authenticate_graph_api():
