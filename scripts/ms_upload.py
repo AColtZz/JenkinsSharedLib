@@ -3,7 +3,6 @@ import sys
 import json
 try:
     import requests
-    from tqdm import tqdm
 except ImportError:
     print("Some required libraries are missing. Installing them now...")
     
@@ -15,19 +14,13 @@ except ImportError:
     except ImportError:
         sys.exit("Failed to install 'requests'. Please install it manually using 'pip install requests'.")
 
-    # Attempt to install tqdm
-    try:
-        pip.main(['install', 'tqdm'])
-        from tqdm import tqdm
-    except ImportError:
-        sys.exit("Failed to install 'tqdm'. Please install it manually using 'pip install tqdm'.")
-
 # Upload a file to the SharePoint document library using the Microsoft Graph API
-auth_file = sys.argv[1] #Custom Secret Auth File
-file_path = sys.argv[1] #local file path
-file_name = sys.argv[2] #filename
-folder_name = sys.argv[3] #drive folder path/name
+AUTHFILE = sys.argv[1] #Custom Secret Auth File
+file_path = sys.argv[2] #local file path
+file_name = sys.argv[3] #filename
+folder_name = sys.argv[4] #drive folder path/name
 
+auth_file = open(AUTHFILE, "r").read()      
 tenant_id = json.loads(auth_file).get('tenant_id')
 client_id = json.loads(auth_file).get('client_id')
 client_secret = json.loads(auth_file).get('client_secret')
@@ -133,38 +126,39 @@ def upload_to_drive(access_token, site_id, drive_id):
     next_expected_range = session_data.get('nextExpectedRanges')[0]
 
     # Upload chunks until there are no more expected ranges
-    with tqdm(total=file_size, unit='B', unit_scale=True, desc="Uploading", dynamic_ncols=True) as pbar:
-        with open(file_path, 'rb') as file:
-            while next_expected_range:
-                start_byte = int(next_expected_range.split('-')[0])
-                
-                # Read the chunk from the file, ensuring not to read beyond the end of the file
-                chunk = file.read(chunk_size)
+    with open(file_path, 'rb') as file:
+        while next_expected_range:
+            start_byte = int(next_expected_range.split('-')[0])
 
-                # Set headers for the chunk upload
-                headers['Content-Length'] = str(len(chunk))
-                headers['Content-Range'] = f'bytes {start_byte}-{start_byte + len(chunk) - 1}/{file_size}'
+            # Read the chunk from the file, ensuring not to read beyond the end of the file
+            chunk = file.read(chunk_size)
 
-                # print(f" Uploading bytes: {start_byte}-{start_byte + len(chunk) - 1}")
-                response = requests.put(upload_url, headers=headers, data=chunk, stream=True, timeout=60)
+            # Set headers for the chunk upload
+            headers['Content-Length'] = str(len(chunk))
+            headers['Content-Range'] = f'bytes {start_byte}-{start_byte + len(chunk) - 1}/{file_size}'
 
-                pbar.update(len(chunk))  # Update progress bar for each chunk
+            # Calculate and print progress percentage
+            progress_percentage = round((start_byte + len(chunk)) / file_size * 100, 1)
+            print(f"Progress: {progress_percentage}%")
+            # print(f"Uploading bytes: {start_byte}-{start_byte + len(chunk) - 1}")
+            
+            response = requests.put(upload_url, headers=headers, data=chunk, stream=True, timeout=60)
 
-                if response.status_code == 200 or response.status_code == 201:
-                    # File uploaded successfully
-                    print(f"\nFile uploaded.")
-                    print(f"URL: {response.json().get('webUrl')}")
-                    sys.exit(0)
+            if response.status_code == 200 or response.status_code == 201:
+                # File uploaded successfully
+                print(f"\nFile uploaded.")
+                print(f"URL: {response.json().get('webUrl')}")
+                sys.exit(0)
 
-                # Check the response status code
-                if response.status_code != 202:
-                    print(f"Failed to upload file. Status code: {response.status_code}")
-                    print(f"Response: {response.text}")
-                    sys.exit(1)
+            # Check the response status code
+            if response.status_code != 202:
+                print(f"Failed to upload file. Status code: {response.status_code}")
+                print(f"Response: {response.text}")
+                sys.exit(1)
 
-                # Parse the new session data from the response
-                session_data = response.json()
-                next_expected_range = session_data.get('nextExpectedRanges')[0]
+            # Parse the new session data from the response
+            session_data = response.json()
+            next_expected_range = session_data.get('nextExpectedRanges')[0]
 
 def main():
     access_token = authenticate_graph_api()
