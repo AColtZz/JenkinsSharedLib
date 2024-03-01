@@ -1,5 +1,6 @@
-import os
 import sys
+sys.stdout.flush()
+import os
 import json
 try:
     import requests
