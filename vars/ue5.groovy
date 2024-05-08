@@ -18,6 +18,8 @@ def buildBlueprintProject(engineRoot, projectName, project, config, platform, ou
 {
    init(engineRoot, projectName, project)
    
+   runBuildDataCommand(config, platform)
+   
    // Only package since we have a blueprintOnly project
    bat(label: "Package UE5 project", script: "\"${ue5Info.engineRoot}Engine\\Build\\BatchFiles\\RunUAT.bat\" BuildCookRun -Project=\"${ue5Info.project}\" -NoP4 -Distribution -TargetPlatform=${platform} -Platform=${platform} -ClientConfig=${config} -ServerConfig=${config} -Cook -Allmaps -Build -Stage -Pak -Archive -Archivedirectory=\"${outputDir}\" -Rocket -Prereqs -Package")
 }
@@ -63,6 +65,16 @@ def runFilteredTests(testFilter, config = "Development", platform = "Win64")
       default:
          log.error("Invalid Filter! Valid Filters: Engine, Smoke, Stress, Perf, Product.")
          break
+   }
+}
+
+def runBuildDataCommand(config = "Development", platform = "Win64")
+{
+   log("Running BuildLighting in ${config} configuration on ${platform}")
+   def result = bat (label: "Run UE5 BuildLighting", script: "\"${ue5Info.engineRoot}Engine\\Binaries\\${platform}\\UnrealEditor-Cmd.exe\" \"${ue5Info.project}\" -Run=ResavePackages -IgnoreChangeList -BuildLighting -Quality=Production -MapsOnly -ProjectOnly -AllowCommandletRendering", returnStatus: true)
+   
+   if (result != 0) {
+      unstable "BuildLighting Failed!"
    }
 }
 
