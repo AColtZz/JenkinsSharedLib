@@ -128,26 +128,35 @@ def sendMessage(message, webhook)
    bat(label: "Send Discord Message", script: "curl -X POST -H \"Content-Type: application/json\" -d \"${message}\" ${webhook}")
 }
 
-def succeeded(config, platform, webhook)
+def succeeded(config, platform, webhook, page = "")
 {
    sendMessage(createMessage(":white_check_mark: BUILD SUCCEEDED :white_check_mark:",
                                      "green",
                                      [[name:"${config}(${platform}) ${env.JOB_BASE_NAME} has succeeded", 
                                      value:"Last Changelist: ${env.P4_CHANGELIST}"],
-                                     [name:"Job url", 
-                                     value:"${env.BUILD_URL}"]],
+                                     [name:"Job url", value:"${env.BUILD_URL}/${page}"]],
                                      [text:"${env.JOB_BASE_NAME} (${env.BUILD_NUMBER})"])
                                  , webhook)
 }
 
-def failed(config, platform, webhook)
+def unstable(config, platform, webhook, page = "")
+{
+   sendMessage(createMessage(":warning: BUILD UNSTABLE :warning:",
+                                     "yellow",
+                                     [[name:"${config}(${platform}) ${env.JOB_BASE_NAME} is unstable", 
+                                     value:"Last Changelist: ${env.P4_CHANGELIST}"],
+                                     [name:"Job url", value:"${env.BUILD_URL}/${page}"]],
+                                     [text:"${env.JOB_BASE_NAME} (${env.BUILD_NUMBER})"])
+                                 , webhook)
+}
+
+def failed(config, platform, webhook, page = "")
 {
    sendMessage(createMessage(":x: BUILD FAILED :x:",
                                      "red",
                                      [[name:"${config}(${platform}) ${env.JOB_BASE_NAME} has failed", 
                                      value:"Last Changelist: ${env.P4_CHANGELIST}"],
-                                     [name:"Job url", 
-                                     value:"${env.BUILD_URL}"]],
+                                     [name:"Job url", value:"${env.BUILD_URL}/${page}"]],
                                      [text:"${env.JOB_BASE_NAME} (${env.BUILD_NUMBER})"])
                                  , webhook)
 }
